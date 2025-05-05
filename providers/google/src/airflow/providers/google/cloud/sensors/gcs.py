@@ -52,7 +52,6 @@ class GCSObjectExistenceSensor(BaseSensorOperator):
     :param object: The name of the object to check in the Google cloud
         storage bucket.
     :param use_glob: When set to True the object parameter is interpreted as glob
-    :param user_project: The identifier of the Google Cloud project to bill for the request. Required for Requester Pays buckets.
     :param google_cloud_conn_id: The connection ID to use when
         connecting to Google Cloud Storage.
     :param impersonation_chain: Optional service account to impersonate using short-term
@@ -64,6 +63,7 @@ class GCSObjectExistenceSensor(BaseSensorOperator):
         Service Account Token Creator IAM role to the directly preceding identity, with first
         account from the list granting this role to the originating account (templated).
     :param retry: (Optional) How to retry the RPC
+    :param user_project: The identifier of the Google Cloud project to bill for the request. Required for Requester Pays buckets.
     """
 
     template_fields: Sequence[str] = (
@@ -79,24 +79,24 @@ class GCSObjectExistenceSensor(BaseSensorOperator):
         bucket: str,
         object: str,
         use_glob: bool = False,
-        user_project: str | None = None,
         google_cloud_conn_id: str = "google_cloud_default",
         impersonation_chain: str | Sequence[str] | None = None,
         retry: Retry = DEFAULT_RETRY,
         deferrable: bool = conf.getboolean("operators", "default_deferrable", fallback=False),
+        user_project: str | None = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self.bucket = bucket
         self.object = object
         self.use_glob = use_glob
-        self.user_project = user_project
         self.google_cloud_conn_id = google_cloud_conn_id
         self._matches: bool = False
         self.impersonation_chain = impersonation_chain
         self.retry = retry
 
         self.deferrable = deferrable
+        self.user_project = user_project
 
     def poke(self, context: Context) -> bool:
         self.log.info("Sensor checks existence of : %s, %s", self.bucket, self.object)
