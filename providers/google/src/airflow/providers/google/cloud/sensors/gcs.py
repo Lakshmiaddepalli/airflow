@@ -52,6 +52,7 @@ class GCSObjectExistenceSensor(BaseSensorOperator):
     :param object: The name of the object to check in the Google cloud
         storage bucket.
     :param use_glob: When set to True the object parameter is interpreted as glob
+    :param user_project: The identifier of the Google Cloud project to bill for the request. Required for Requester Pays buckets.
     :param google_cloud_conn_id: The connection ID to use when
         connecting to Google Cloud Storage.
     :param impersonation_chain: Optional service account to impersonate using short-term
@@ -78,6 +79,7 @@ class GCSObjectExistenceSensor(BaseSensorOperator):
         bucket: str,
         object: str,
         use_glob: bool = False,
+        user_project: str | None = None,
         google_cloud_conn_id: str = "google_cloud_default",
         impersonation_chain: str | Sequence[str] | None = None,
         retry: Retry = DEFAULT_RETRY,
@@ -88,6 +90,7 @@ class GCSObjectExistenceSensor(BaseSensorOperator):
         self.bucket = bucket
         self.object = object
         self.use_glob = use_glob
+        self.user_project = user_project
         self.google_cloud_conn_id = google_cloud_conn_id
         self._matches: bool = False
         self.impersonation_chain = impersonation_chain
@@ -102,9 +105,9 @@ class GCSObjectExistenceSensor(BaseSensorOperator):
             impersonation_chain=self.impersonation_chain,
         )
         self._matches = (
-            bool(hook.list(self.bucket, match_glob=self.object))
+            bool(hook.list(self.bucket, match_glob=self.object, user_project=self.user_project))
             if self.use_glob
-            else hook.exists(self.bucket, self.object, self.retry)
+            else hook.exists(self.bucket, self.object, self.retry, user_project=self.user_project)
         )
         return self._matches
 
